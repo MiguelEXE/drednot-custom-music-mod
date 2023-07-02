@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Custom ship music
-// @version      1.0
+// @version      1.1
 // @description  Music on drednot.io
 // @author       MiguelEX3
 // @match        https://*.drednot.io/
@@ -15,6 +15,9 @@
 
 let holderWrapper;
 let youtubePlayer;
+let skipAndDeny = false;
+let alreadyAsked = false;
+const _wait = ms => new Promise(r => setTimeout(r,ms));
 function createHolder(){
 	const holderWrapper2 = document.createElement("div");
 	const holder = document.createElement("div");
@@ -52,9 +55,80 @@ function onPlayerReady(event){
 function playYoutubeVideo(id){
 	youtubePlayer.loadVideoById(id);
 }
-function playSound(motd){
+
+function createTextEl(elType, text){
+	const el = document.createElement(elType);
+	el.innerText = text;
+	return el;
+}
+function createBox(){
+	const bigBox = document.createElement("div");
+	bigBox.classList.add("modal-container");
+	const smallBox = document.createElement("div");
+	smallBox.classList.add("modal-window");
+	smallBox.classList.add("window");
+	smallBox.classList.add("darker");
+	bigBox.append(smallBox);
+	document.body.append(bigBox);
+	return {bigBox, smallBox};
+}
+function createLinkToYoutubeVideo(id){
+	return `https://www.youtube.com/watch?v=${id}`;
+}
+function createLinkToPlatformAudio(platform, id){
+	const link = createTextEl("a", "Link to the audio which the mod will play.");
+	link.target = "_blank";
+	link.rel = "noopener noreferrer";
+	switch(platform){
+		case "YTV":
+			link.href = createLinkToYoutubeVideo(id);
+			break;
+		default:
+			console.warn("[OSTs] Invalid platform for link");
+			break;
+	}
+	return link;
+}
+function askPermission(platform, id){
+	const {bigBox, smallBox} = createBox();
+	const acceptEl = createTextEl("button", "Yes");
+	const denyEl = createTextEl("button", "No");
+	acceptEl.classList.add("btn-green");
+	denyEl.classList.add("btn-red");
+	smallBox.style.textAlign = "center";
+	smallBox.append(createTextEl("h2", alreadyAsked ? `Let this ship play another music on your tab?` : `Let this ship play music on your tab?`), createTextEl("p", "BY PRESSING 'Yes' YOU CONFIRM THAT ANY AUDIO PLAYED IS NOT FROM THE MOD AUTHOR'S FAULT BUT FROM WHO PUT IN THE MOTD.\nPressing 'No' will deny further request from the ship to play any audio on your tab. To reset this, simply rejoin the ship."), createLinkToPlatformAudio(platform, id), document.createElement("br"), acceptEl, denyEl);
+	alreadyAsked = true;
+	return new Promise(r => {
+		function deny(e){
+			if(!e.isTrusted) return;
+			acceptEl.removeEventListener("click", accept);
+			denyEl.removeEventListener("click", deny);
+			bigBox.remove();
+			skipAndDeny = true;
+			r(false);
+		}
+		function accept(e){
+			if(!e.isTrusted) return;
+			acceptEl.removeEventListener("click", accept);
+			denyEl.removeEventListener("click", deny);
+			bigBox.remove();
+			r(true);
+		}
+		acceptEl.addEventListener("click", accept);
+		denyEl.addEventListener("click", deny);
+	});
+}
+function stopPlayers(){
+	youtubePlayer.stopVideo();
+	console.info("[OSTs] Stopped players.");
+}
+async function checkAndPlaySound(motd){
+	if(skipAndDeny) return;
 	const {platform, id} = parseMotd(motd);
-	console.log(platform, id);
+	if(platform !== ""){
+		const hasPermission = await askPermission(platform, id);
+		if(!hasPermission) return stopPlayers();
+	}
 	switch(platform){
 		case "YTV":
 			//embed.src = makeYTVEmbedURL(id);
@@ -66,17 +140,11 @@ function playSound(motd){
 			break;
 	}
 }
-const _wait = ms => new Promise(r => setTimeout(r,ms));
 function waitFor(el){
 	return new Promise(async r => {
 		while(!document.querySelector(el)) await _wait(1);
 		r(document.querySelector(el));
 	});
-}
-function createTextEl(elType, text){
-	const el = document.createElement(elType);
-	el.innerText = text;
-	return el;
 }
 async function createSoundInfo(){
 	const soundSection = document.createElement("section");
@@ -101,11 +169,8 @@ function loadYoutubeAPI(){
 		window.onYouTubeIframeAPIReady = () => r();
 	});
 }
-function stopPlayers(){
-	console.info("[OSTs] done.");
-	youtubePlayer.stopVideo();
-}
 
+// Main function
 (async function() {
     'use strict';
 
@@ -127,7 +192,7 @@ function stopPlayers(){
 	const mapButtonEl = document.querySelector("#map_button");
 	const motdTextEl = document.querySelector("#motd-text");
 	let observer = new MutationObserver(function(){
-		playSound(motdTextEl.textContent);
+		checkAndPlaySound(motdTextEl.textContent);
 	});
 	observer.observe(motdTextEl, {
 		characterData: true,
@@ -137,6 +202,7 @@ function stopPlayers(){
 	});
 	let gameClosedObserver = new MutationObserver(function(){
 		if(getComputedStyle(mapButtonEl).display === "none"){
+			alreadyAsked = skipAndDeny = false;
 			stopPlayers();
 		}
 	});
