@@ -5,6 +5,10 @@
 // @author       MiguelEX3
 // @match        https://*.drednot.io/
 // @icon         https://test.drednot.io/img/item/exbox.png
+// @downloadURL  https://raw.githubusercontent.com/MiguelEXE/drednot-custom-music-mod/master/custom-music-mod.js
+// @updateURL    https://raw.githubusercontent.com/MiguelEXE/drednot-custom-music-mod/master/custom-music-mod.js
+// @supportURL   https://github.com/MiguelEXE/drednot-custom-music-mod/issues
+// @namespace    https://github.com/MiguelEXE/drednot-custom-music-mod
 // @grant        none
 // @run-at       document-start
 // ==/UserScript==
