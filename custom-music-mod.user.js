@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         Custom ship music
-// @version      1.1
+// @name         Drednot Music Mod
+// @version      1.2
 // @description  Music on drednot.io
 // @author       MiguelEX3
 // @match        https://*.drednot.io/
-// @icon         https://test.drednot.io/img/item/exbox.png
+// @icon         https://drednot.io/img/item/exbox.png
 // @downloadURL  https://raw.githubusercontent.com/MiguelEXE/drednot-custom-music-mod/master/custom-music-mod.js
 // @updateURL    https://raw.githubusercontent.com/MiguelEXE/drednot-custom-music-mod/master/custom-music-mod.js
 // @supportURL   https://github.com/MiguelEXE/drednot-custom-music-mod/issues
@@ -84,7 +84,7 @@ function createLinkToPlatformAudio(platform, id){
 			link.href = createLinkToYoutubeVideo(id);
 			break;
 		default:
-			console.warn("[OSTs] Invalid platform for link");
+			console.warn("[DCMM] Invalid platform for link");
 			break;
 	}
 	return link;
@@ -120,7 +120,7 @@ function askPermission(platform, id){
 }
 function stopPlayers(){
 	youtubePlayer.stopVideo();
-	console.info("[OSTs] Stopped players.");
+	console.info("[DCMM] Stopped players.");
 }
 async function checkAndPlaySound(motd){
 	if(skipAndDeny) return;
@@ -132,11 +132,11 @@ async function checkAndPlaySound(motd){
 	switch(platform){
 		case "YTV":
 			//embed.src = makeYTVEmbedURL(id);
-			console.info("[OSTs] Youtube video.");
+			console.info("[DCMM] Youtube video.");
 			playYoutubeVideo(id);
 			break;
 		default:
-			console.warn("[OSTs] Invalid platform");
+			console.warn("[DCMM] Invalid platform");
 			break;
 	}
 }
@@ -148,7 +148,7 @@ function waitFor(el){
 }
 async function createSoundInfo(){
 	const soundSection = document.createElement("section");
-	soundSection.append(createTextEl("h3", "Custom ship music mod"));
+	soundSection.append(createTextEl("h3", "Drednot Music Mod"));
 	const firstSection = document.createElement("p");
 	soundSection.append(firstSection);
 
@@ -189,7 +189,7 @@ function loadYoutubeAPI(){
 		}
 	});
 
-	const mapButtonEl = document.querySelector("#map_button");
+	const mapButtonEl = document.querySelector("#exit_button");
 	const motdTextEl = document.querySelector("#motd-text");
 	let observer = new MutationObserver(function(){
 		checkAndPlaySound(motdTextEl.textContent);
